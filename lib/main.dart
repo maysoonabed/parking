@@ -106,8 +106,7 @@ class _MyHomePageState extends State<MyApp> {
 
       uidIn = snapshot.value['rfid']['in'];
       uidOut = snapshot.value['rfid']['out'];
-      print(uidIn);
-    });
+     });
 
     espRef.child('rfid').child('in').onValue.listen((event) {
       print(event.snapshot.value.toString());
