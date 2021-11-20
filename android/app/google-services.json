@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "241361891388",
+    "firebase_url": "https://mysonp-e7463-default-rtdb.firebaseio.com",
+    "project_id": "mysonp-e7463",
+    "storage_bucket": "mysonp-e7463.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:241361891388:android:8496474faea2a40a7d9339",
+        "android_client_info": {
+          "package_name": "com.example.parking"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "241361891388-ge349qqse92639n8bdf8tpf7dpnmctis.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.parking",
+            "certificate_hash": "952cf04bbf9a4099167e4f426eea88255e3aa03f"
+          }
+        },
+        {
+          "client_id": "241361891388-8r8sq87oj76k1a64769bqbtqk3n7het5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBPREyYkTUDZiXmPYn8mzOnhf0ZqHi-lUs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "241361891388-8r8sq87oj76k1a64769bqbtqk3n7het5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
