@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.green,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(title: 'smart enerji'),
+      home: MyHomePage(title: 'Parking'),
     );
   }
 }
@@ -78,35 +78,7 @@ print(uidIn);
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Container(
-              margin: EdgeInsets.all(30),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(50)),
-                color: ledOn == 1 ? Colors.green : Colors.red,
-              ),
-              child: SizedBox(
-                width: 100,
-                height: 100,
-              ),
-            ),
-            RaisedButton(
-              child: Text("Turn On the Servo",
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontStyle: FontStyle.italic,
-                      fontSize: 20.0)),
-              color: Colors.green,
-              onPressed: _turnOnLed,
-            ),
-            RaisedButton(
-              child: Text("Turn Off the Servo",
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontStyle: FontStyle.italic,
-                      fontSize: 20.0)),
-              color: Colors.red,
-              onPressed: _turnOffLed,
-            ),
+
           ],
         ),
       ),
