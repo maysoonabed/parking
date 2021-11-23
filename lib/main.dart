@@ -116,6 +116,15 @@ class _MyHomePageState extends State<MyApp> {
       } else
         _turnOffLed();
     });
+
+    espRef.child('rfid').child('out').onValue.listen((event) {
+      print(event.snapshot.value.toString());
+
+      if (event.snapshot.value.toString() == '84a2132d') {
+        _turnOnLed2();
+      } else
+        _turnOffLed2();
+    });
   }
 
   @override
@@ -154,31 +163,41 @@ class _MyHomePageState extends State<MyApp> {
     databaseReference.child("Esp/ledStatus").update({
       'ledOn': 1,
     });
-
-    databaseReference.child("Esp/ledStatus").update({
-      'ledOff': 0,
-    });
-
     setState(() {
       ledOn = 1;
-      ledOff = 0;
-    });
+     });
   }
 
   void _turnOffLed() {
-    databaseReference.child("Esp/ledStatus").update({
-      'ledOff': 1,
-    });
-
     databaseReference.child("Esp/ledStatus").update({
       'ledOn': 0,
     });
 
     setState(() {
       ledOn = 0;
+     });
+  }
+
+  void _turnOnLed2() {
+    databaseReference.child("Esp/ledStatus").update({
+      'ledOff': 1,
+    });
+    setState(() {
       ledOff = 1;
     });
   }
+
+  void _turnOffLed2() {
+    databaseReference.child("Esp/ledStatus").update({
+      'ledOff': 0,
+    });
+
+    setState(() {
+      ledOff = 0;
+    });
+  }
+
+
 }
 
 class Choice {

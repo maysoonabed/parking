@@ -9,16 +9,19 @@
 #include <stdlib.h>
 
 #define RST_PIN         22          // Configurable, see typical pin layout above
-#define SS_PIN          5         // Configurable, see typical pin layout above
-#define SS_PIN2         21         // Configurable, see typical pin layout above
+#define SS_PIN          21        // Configurable, see typical pin layout above
+#define SS_PIN2         5         // Configurable, see typical pin layout above
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
+MFRC522 mfrc522_out(SS_PIN2, RST_PIN);  // Create MFRC522 instance
 
 
 static const int servoPin = 4;
 static const int servoPin2 = 13;
 
 Servo servo1;
+Servo servOut;
+
 
 #define FIREBASE_HOST "mysonp-e7463-default-rtdb.firebaseio.com/" //Do not include https:// in FIREBASE_HOST
 #define FIREBASE_AUTH "F1X5G48TyRCdhAFxx4OPxEWcDoOSIpbyvn5kLuWh"
@@ -26,8 +29,8 @@ Servo servo1;
 #define API_KEY "AIzaSyBPREyYkTUDZiXmPYn8mzOnhf0ZqHi-lUs"
 
 
-#define WIFI_SSID "Abdelqader"
-#define WIFI_PASSWORD "Abdor177"
+#define WIFI_SSID    "maysoon"   // "Abdelqader"
+#define WIFI_PASSWORD   "maysoonAbd"  //"Abdor177"
 
 
 // Define Firebase Data Object
@@ -44,6 +47,8 @@ void setup() {
  
   Serial.begin(115200);
   servo1.attach(servoPin);
+  servOut.attach(servoPin2);
+
 
  
  
@@ -72,26 +77,22 @@ void setup() {
   SPI.begin();            // Init SPI bus
   mfrc522.PCD_Init();    // Init MFRC522
   mfrc522.PCD_DumpVersionToSerial();  // Show details of PCD - MFRC522 Card Reader details
+  mfrc522_out.PCD_Init();    // Init MFRC522
+  mfrc522_out.PCD_DumpVersionToSerial();  // Show details of PCD - MFRC522 Card Reader details
+
   Serial.println(F("Scan PICC to see UID, SAK, type, and data blocks..."));
 
 }
 
 void loop() {
 
-    if ( ! mfrc522.PICC_IsNewCardPresent()) {
-    return;
-  }
-
-  // Select one of the cards
-  if ( ! mfrc522.PICC_ReadCardSerial()) {
-    return;
-  }
-
+  mfrc522.PCD_Init(); 
+    if (  mfrc522.PICC_IsNewCardPresent()&& mfrc522.PICC_ReadCardSerial()) {
+  
   MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
-  //    memset(buffer, 0, 255);
-  buffer[0] =  '\0';
+   buffer[0] =  '\0';
 
-      Serial.print("UID: ");
+      Serial.print("UID In: ");
       for (int i = 0; i < mfrc522.uid.size; i++) {
     
        ultoa (mfrc522.uid.uidByte[i],buf,HEX);
@@ -102,11 +103,7 @@ void loop() {
       Serial.println();
       std::string str(buffer);
       Firebase.setString(firebaseData, "/Esp/rfid/in",buffer);
-  delay(1000);
-  
-    //  mfrc522.PICC_HaltA(); // halt PICC
-  //    mfrc522.PCD_StopCrypto1(); // stop encryption on PCD
-
+        delay(1000); 
 
   if (Firebase.getDouble(firebaseData, path + "/ledOn"))
   {
@@ -132,24 +129,6 @@ void loop() {
       Serial.println("Servo off");
       }
   }
-
-   if (Firebase.getDouble(firebaseData, path + "/ledOff"))
-  {
-    Serial.println("PASSED");
-  
-    Serial.println();
-
-    if (firebaseData.intData() == 1)
-    {
-       Serial.println("led off");
-
-    }
-    else
-    {
-      Serial.println("led on");
-      }
-  }
-
   else
   {
     Serial.println("FAILED");
@@ -160,6 +139,70 @@ void loop() {
 
   Serial.println("------------------------------------");
   Serial.println("Push integer test...");
+  }
+ 
+  mfrc522_out.PCD_Init(); 
+    if (  mfrc522_out.PICC_IsNewCardPresent()&& mfrc522_out.PICC_ReadCardSerial()) {
+  
+  MFRC522::PICC_Type piccType = mfrc522_out.PICC_GetType(mfrc522_out.uid.sak);
+   buffer[0] =  '\0';
+
+      Serial.print("UID Out: ");
+      for (int i = 0; i < mfrc522_out.uid.size; i++) {
+    
+       ultoa (mfrc522_out.uid.uidByte[i],buf,HEX);
+        strcat(buffer, buf);
+
+      }
+      Serial.println(buffer);
+      Serial.println();
+      std::string str(buffer);
+      Firebase.setString(firebaseData, "/Esp/rfid/out",buffer);
+        delay(1000); 
+
+
+         if (Firebase.getDouble(firebaseData, path + "/ledOff"))
+  {
+    Serial.println("PASSED");
+ 
+    Serial.println();
+
+    if (firebaseData.intData() == 1)
+    {
+ for(int posDegrees = 0; posDegrees <= 180; posDegrees++) {
+        servOut.write(posDegrees);
+         delay(20);
+    }
+
+    for(int posDegrees = 180; posDegrees >= 0; posDegrees--) {
+        servOut.write(posDegrees);
+         delay(20);
+    }      Serial.println("Servo on");
+    }
+
+    else
+    {
+      Serial.println("Servo off");
+      }
+  }
+
+   
+  else
+  {
+    Serial.println("FAILED");
+    Serial.println("REASON: " + firebaseData.errorReason());
+    Serial.println("------------------------------------");
+    Serial.println();
+  }
+
+  Serial.println("------------------------------------");
+  Serial.println("Push integer test...");
+
+
+  }
+ 
+
+
 
 }
 
