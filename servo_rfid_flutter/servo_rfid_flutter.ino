@@ -29,8 +29,11 @@ Servo servOut;
 #define API_KEY "AIzaSyBPREyYkTUDZiXmPYn8mzOnhf0ZqHi-lUs"
 
 
-#define WIFI_SSID    "maysoon"   // "Abdelqader"
-#define WIFI_PASSWORD   "maysoonAbd"  //"Abdor177"
+//#define WIFI_SSID    "maysoon"   
+//#define WIFI_PASSWORD   "maysoonAbd"  
+#define WIFI_SSID "Abdelqader"
+#define WIFI_PASSWORD "Abdor177"
+
 
 
 // Define Firebase Data Object
@@ -113,12 +116,12 @@ void loop() {
 
     if (firebaseData.intData() == 1)
     {
- for(int posDegrees = 0; posDegrees <= 180; posDegrees++) {
+ for(int posDegrees = 0; posDegrees <= 100; posDegrees++) {
         servo1.write(posDegrees);
          delay(20);
     }
 
-    for(int posDegrees = 180; posDegrees >= 0; posDegrees--) {
+    for(int posDegrees = 100; posDegrees >= 0; posDegrees--) {
         servo1.write(posDegrees);
          delay(20);
     }      Serial.println("Servo on");
@@ -169,12 +172,13 @@ void loop() {
 
     if (firebaseData.intData() == 1)
     {
- for(int posDegrees = 0; posDegrees <= 180; posDegrees++) {
+ for(int posDegrees = 0; posDegrees <= 120; posDegrees++) {
         servOut.write(posDegrees);
          delay(20);
     }
+      //   delay(8000);
 
-    for(int posDegrees = 180; posDegrees >= 0; posDegrees--) {
+    for(int posDegrees = 120; posDegrees >= 0; posDegrees--) {
         servOut.write(posDegrees);
          delay(20);
     }      Serial.println("Servo on");
