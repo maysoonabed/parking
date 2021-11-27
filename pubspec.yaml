@@ -16,6 +16,7 @@ dependencies:
   firebase_database: ^6.0.0
   mqtt_client: ^8.2.0
   provider: ^4.3.3
+  percent_indicator: ^3.4.0
 
 
 dev_dependencies:

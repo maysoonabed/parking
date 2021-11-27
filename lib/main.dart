@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:parking/region.dart';
+import 'package:parking/bus.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io' as Io;
+import 'dart:io';
+
+String ip="192.168.1.114";
+
+List<Bus> inBus;
 
 Color apcolor = const Color(0xFF1ABC9C);
 Color apBcolor = const Color(0xFF00796B);
@@ -73,7 +82,16 @@ const List<Color> myGradients4 = [
   Color(0xFF01d5ab),
 ];
 
+
+class MyHttpOverrides extends HttpOverrides{
+  @override
+  HttpClient createHttpClient(SecurityContext context){
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port)=> true;
+  }
+}
 void main() {
+  HttpOverrides.global = new MyHttpOverrides();
   runApp(MyApp());
 }
 
@@ -96,34 +114,109 @@ class _MyHomePageState extends State<MyApp> {
   String uidIn = "";
   String uidOut = "";
 
+
+  chekIn(String uid) async{
+    String apiurl = "https://$ip/parking/phpfiles/checkIn.php"; //10.0.0.8//
+    var response = await http.post(apiurl, body: {
+      'uid': uid, //get the username text
+    });
+
+    if (response.statusCode == 200) {
+      var jsondata = jsonDecode(response.body);
+      setState(() {
+        if(jsondata['hay']==1) {
+          String name=jsondata['name'];
+          String busType=jsondata['busType'];
+          String region=jsondata['region'];
+          String passengers=jsondata['passengers'];
+          Bus b = Bus();
+          b.name=name;
+          b.uid=uid;
+          b.region=region;
+          b.busType=busType;
+          b.passengers=passengers;
+          b.taken=0;
+          inBus.add(b);
+
+          _turnOnLed();
+          DatabaseReference  pass = FirebaseDatabase.instance
+              .reference()
+              .child('Esp/region/$region/$uid');
+             pass.set(0);
+           int lcd=0;
+          for(int i=0;i<inBus.length;i++){
+            if(inBus[i].region==  b.region)
+            lcd++;}
+          DatabaseReference  regs = FirebaseDatabase.instance
+              .reference()
+              .child('Esp/lcd/$region');
+
+          regs.set(lcd);
+
+
+        } else{
+          _turnOffLed();
+          print("no hay");
+        }
+        for(int i=0;i<inBus.length;i++)
+          print(inBus[i].uid);
+      });
+    } else {
+      print("حدث خطأ أثناء الاتصال بالشبكة");
+    }
+
+  }
+
+  void checkOut(String uid){
+    if(inBus.isNotEmpty){
+    int x=inBus.indexWhere((bus) => bus.uid==uid);
+    String p=inBus[x].region;
+    DatabaseReference  pass = FirebaseDatabase.instance
+        .reference()
+        .child('Esp/region/$p/$uid');
+    pass.onDisconnect();
+    pass.remove();
+    pass = null;
+
+    inBus.removeAt(x);
+
+    int lcd=0;
+    for(int i=0;i<inBus.length;i++){
+      if(inBus[i].region==p)
+        lcd++;}
+    DatabaseReference  regs = FirebaseDatabase.instance
+        .reference()
+        .child('Esp/lcd/$p');
+    regs.set(lcd);
+
+
+    }}
+
+
   @override
   void initState() {
     super.initState();
-
+    inBus = [];
     databaseReference.child("Esp").once().then((DataSnapshot snapshot) {
       ledOn = snapshot.value['ledStatus']['ledOn'].toDouble();
       ledOff = snapshot.value['ledStatus']['ledOff'].toDouble();
 
       uidIn = snapshot.value['rfid']['in'];
       uidOut = snapshot.value['rfid']['out'];
+      print(uidIn);
      });
 
     espRef.child('rfid').child('in').onValue.listen((event) {
-      print(event.snapshot.value.toString());
 
-      if (event.snapshot.value.toString() == '84a2132d') {
-        _turnOnLed();
-      } else
-        _turnOffLed();
+      chekIn(event.snapshot.value.toString());
+
     });
 
     espRef.child('rfid').child('out').onValue.listen((event) {
-      print(event.snapshot.value.toString());
 
-      if (event.snapshot.value.toString() == '84a2132d') {
-        _turnOnLed2();
-      } else
-        _turnOffLed2();
+      checkOut(event.snapshot.value.toString());
+      _turnOnLed2();
+
     });
   }
 
@@ -201,27 +294,28 @@ class _MyHomePageState extends State<MyApp> {
 }
 
 class Choice {
-  const Choice({this.title}); //, this.icon
+  const Choice({this.title,this.name}); //, this.icon
   final String title;
+  final String name;
   //final IconData icon;
 }
 
 const List<Choice> choices = const <Choice>[
-  const Choice(title: 'طوباس'),
-  const Choice(title: 'طمون'),
-  const Choice(title: 'الفارعة'),
-  const Choice(title: 'الباذان'),
-  const Choice(title: 'طلوزة'), //, icon: Icons.camera_alt
-  const Choice(title: 'النصارية'),
-  const Choice(title: 'بيتا'),
-  const Choice(title: 'عقربة'),
-  const Choice(title: 'عصيرة '),
-  const Choice(title: 'بيت دجن'),
-  const Choice(title: 'بيت فوريك'),
-  const Choice(title: 'دير الحطب'),
-  const Choice(title: 'حوارة'),
-  const Choice(title: 'سالم'),
-  const Choice(title: 'روجيب'),
+  const Choice(title: 'طوباس',name:"Tubas"),
+  const Choice(title: 'طمون',name:"Tammon"),
+  const Choice(title: 'الفارعة',name:"Al-Fara"),
+  const Choice(title: 'الباذان',name:"Badhan"),
+  const Choice(title: 'طلوزة',name:"Talluza"), //, icon: Icons.camera_alt
+  const Choice(title: 'النصارية',name:"Nasariah"),
+  const Choice(title: 'بيتا',name:"Beta"),
+  const Choice(title: 'عقربة',name:"Aqraba"),
+  const Choice(title: 'عصيرة ',name:"Asira"),
+ /* const Choice(title: 'بيت دجن',name:"Tubas"),
+  const Choice(title: 'بيت فوريك',name:"Tubas"),
+  const Choice(title: 'دير الحطب',name:"Tubas"),*/
+ /* const Choice(title: 'حوارة',name:"Hawara"),
+  const Choice(title: 'سالم',name:"Salem"),
+  const Choice(title: 'روجيب',name:"Rojib"),*/
 ];
 
 class SelectCard extends StatelessWidget {
@@ -243,7 +337,7 @@ class SelectCard extends StatelessWidget {
         //Navigator.push(context, )
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => region()),
+          MaterialPageRoute(builder: (context) => region(choice.name)),
         );
       },
       child: Text(

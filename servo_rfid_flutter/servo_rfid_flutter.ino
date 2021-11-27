@@ -7,13 +7,18 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <LiquidCrystal_I2C.h>
+
+String strs[12]= {"Al-Fara","Tubas", "Tammon", "Badhan","Talluza","Nasariah","Beta","Aqraba","Asira","Hawara","Salem","Rojib"};
+char *str;
+int num[12] =  { 0 }; 
+LiquidCrystal_I2C lcd(0x27, 20, 4);  
 
 #define RST_PIN         22          // Configurable, see typical pin layout above
-#define SS_PIN          21        // Configurable, see typical pin layout above
-#define SS_PIN2         5         // Configurable, see typical pin layout above
-
+#define SS_PIN          2        
+#define SS_PIN2         5         
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
-MFRC522 mfrc522_out(SS_PIN2, RST_PIN);  // Create MFRC522 instance
+MFRC522 mfrc522_out(SS_PIN2, RST_PIN);  
 
 
 static const int servoPin = 4;
@@ -25,10 +30,7 @@ Servo servOut;
 
 #define FIREBASE_HOST "mysonp-e7463-default-rtdb.firebaseio.com/" //Do not include https:// in FIREBASE_HOST
 #define FIREBASE_AUTH "F1X5G48TyRCdhAFxx4OPxEWcDoOSIpbyvn5kLuWh"
-
-#define API_KEY "AIzaSyBPREyYkTUDZiXmPYn8mzOnhf0ZqHi-lUs"
-
-
+ 
 //#define WIFI_SSID    "maysoon"   
 //#define WIFI_PASSWORD   "maysoonAbd"  
 #define WIFI_SSID "Abdelqader"
@@ -46,15 +48,15 @@ char  buf [10];
 char buffer [100];
 
 void setup() {
+ // initialize LCD
+  lcd.begin();
+  // turn on LCD backlight                      
+  lcd.backlight();
 
- 
+  
   Serial.begin(115200);
   servo1.attach(servoPin);
   servOut.attach(servoPin2);
-
-
- 
- 
   Serial.print("Connecting to ");
   Serial.println(WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -80,14 +82,26 @@ void setup() {
   SPI.begin();            // Init SPI bus
   mfrc522.PCD_Init();    // Init MFRC522
   mfrc522.PCD_DumpVersionToSerial();  // Show details of PCD - MFRC522 Card Reader details
-  mfrc522_out.PCD_Init();    // Init MFRC522
-  mfrc522_out.PCD_DumpVersionToSerial();  // Show details of PCD - MFRC522 Card Reader details
-
+  mfrc522_out.PCD_Init();    
+  mfrc522_out.PCD_DumpVersionToSerial();  
+  
   Serial.println(F("Scan PICC to see UID, SAK, type, and data blocks..."));
 
-}
+for (int i=0;i<4;i++){
+  lcd.setCursor(0, i);
+  lcd.print(strs[i]);
+  lcd.setCursor(10, i);
+  lcd.print(strs[i+4]);
+  lcd.setCursor(8, i);
+  lcd.print("0");
+  lcd.setCursor(19, i);
+  lcd.print("0");
+}}
 
 void loop() {
+
+
+ 
 
   mfrc522.PCD_Init(); 
     if (  mfrc522.PICC_IsNewCardPresent()&& mfrc522.PICC_ReadCardSerial()) {
@@ -142,6 +156,36 @@ void loop() {
 
   Serial.println("------------------------------------");
   Serial.println("Push integer test...");
+
+
+
+
+
+for (int i=0;i<12;i++){
+
+  if (Firebase.getInt(firebaseData, "Esp/lcd/"+strs[i]))
+  {
+    Serial.println("PASSED ");
+    Serial.println();
+ int x=   firebaseData.intData() ;
+ if(x!=num[i]){
+  num[i]=x;
+    lcd.setCursor(9*(i/8)+8, i%4);
+    lcd.print(num[i]);
+
+}
+  }  
+  else
+  {
+    Serial.println("FAILED");
+    Serial.println("REASON: " + firebaseData.errorReason());
+    Serial.println("------------------------------------");
+    Serial.println();
+  }
+}
+
+
+  
   }
  
   mfrc522_out.PCD_Init(); 
@@ -206,6 +250,28 @@ void loop() {
   }
  
 
+for (int i=0;i<12;i++){
+
+  if (Firebase.getInt(firebaseData, "Esp/lcd/"+strs[i]))
+  {
+    Serial.println("PASSED ");
+    Serial.println();
+ int x=   firebaseData.intData() ;
+ if(x!=num[i]){
+  num[i]=x;
+    lcd.setCursor(9*(i/8)+8, i%4);
+    lcd.print(num[i]);
+
+}
+  }  
+  else
+  {
+    Serial.println("FAILED");
+    Serial.println("REASON: " + firebaseData.errorReason());
+    Serial.println("------------------------------------");
+    Serial.println();
+  }
+}
 
 
 }
