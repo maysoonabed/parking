@@ -9,7 +9,7 @@ import 'dart:convert';
 import 'dart:io' as Io;
 import 'dart:io';
 
-String ip="192.168.1.114";
+String ip="192.168.1.109";
 
 List<Bus> inBus;
 
@@ -196,7 +196,9 @@ class _MyHomePageState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    setState(() {
     inBus = [];
+    });
     databaseReference.child("Esp").once().then((DataSnapshot snapshot) {
       ledOn = snapshot.value['ledStatus']['ledOn'].toDouble();
       ledOff = snapshot.value['ledStatus']['ledOff'].toDouble();

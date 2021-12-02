@@ -33,8 +33,8 @@ Servo servOut;
  
 //#define WIFI_SSID    "maysoon"   
 //#define WIFI_PASSWORD   "maysoonAbd"  
-#define WIFI_SSID "Abdelqader"
-#define WIFI_PASSWORD "Abdor177"
+#define WIFI_SSID "Tobasi2020"
+#define WIFI_PASSWORD "135790bb"
 
 
 
@@ -86,7 +86,7 @@ void setup() {
   mfrc522_out.PCD_DumpVersionToSerial();  
   
   Serial.println(F("Scan PICC to see UID, SAK, type, and data blocks..."));
-
+ 
 for (int i=0;i<4;i++){
   lcd.setCursor(0, i);
   lcd.print(strs[i]);
@@ -96,6 +96,7 @@ for (int i=0;i<4;i++){
   lcd.print("0");
   lcd.setCursor(19, i);
   lcd.print("0");
+  
 }}
 
 void loop() {
@@ -130,15 +131,18 @@ void loop() {
 
     if (firebaseData.intData() == 1)
     {
+
+ for(int posDegrees = 100; posDegrees >= 0; posDegrees--) {
+        servo1.write(posDegrees);
+         delay(20);
+    }
+         delay(8000);
+
  for(int posDegrees = 0; posDegrees <= 100; posDegrees++) {
         servo1.write(posDegrees);
          delay(20);
     }
-
-    for(int posDegrees = 100; posDegrees >= 0; posDegrees--) {
-        servo1.write(posDegrees);
-         delay(20);
-    }      Serial.println("Servo on");
+ 
     }
 
     else
@@ -165,8 +169,7 @@ for (int i=0;i<12;i++){
 
   if (Firebase.getInt(firebaseData, "Esp/lcd/"+strs[i]))
   {
-    Serial.println("PASSED ");
-    Serial.println();
+ 
  int x=   firebaseData.intData() ;
  if(x!=num[i]){
   num[i]=x;
@@ -210,19 +213,17 @@ for (int i=0;i<12;i++){
 
          if (Firebase.getDouble(firebaseData, path + "/ledOff"))
   {
-    Serial.println("PASSED");
  
-    Serial.println();
 
     if (firebaseData.intData() == 1)
     {
- for(int posDegrees = 0; posDegrees <= 120; posDegrees++) {
+ for(int posDegrees = 0; posDegrees <= 100; posDegrees++) {
         servOut.write(posDegrees);
          delay(20);
     }
-      //   delay(8000);
+         delay(8000);
 
-    for(int posDegrees = 120; posDegrees >= 0; posDegrees--) {
+    for(int posDegrees = 100; posDegrees >= 10; posDegrees--) {
         servOut.write(posDegrees);
          delay(20);
     }      Serial.println("Servo on");
@@ -254,8 +255,7 @@ for (int i=0;i<12;i++){
 
   if (Firebase.getInt(firebaseData, "Esp/lcd/"+strs[i]))
   {
-    Serial.println("PASSED ");
-    Serial.println();
+  
  int x=   firebaseData.intData() ;
  if(x!=num[i]){
   num[i]=x;
