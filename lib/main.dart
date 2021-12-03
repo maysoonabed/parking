@@ -2,16 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:parking/region.dart';
 import 'package:parking/bus.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'dart:async';
 import 'dart:convert';
-import 'dart:io' as Io;
 import 'dart:io';
 
 String ip="192.168.1.109";
 
 List<Bus> inBus;
+List<String> strs= ["Al-Fara","Tubas", "Tammon", "Badhan","Talluza","Nasariah","Beta","Aqraba","Asira","Hawara","Salem","Rojib"];
 
 Color apcolor = const Color(0xFF1ABC9C);
 Color apBcolor = const Color(0xFF00796B);
@@ -198,13 +196,30 @@ class _MyHomePageState extends State<MyApp> {
     super.initState();
     setState(() {
     inBus = [];
+    DatabaseReference  reg = FirebaseDatabase.instance
+        .reference()
+        .child('Esp/region');
+    reg.onDisconnect();
+    reg.remove();
+    reg = null;
+    DatabaseReference  LCD = FirebaseDatabase.instance
+        .reference()
+        .child('Esp/lcd');
+     for(int i=0;i<12;i++){
+       LCD.child('${strs[i]}').set(0);
+     }
+    DatabaseReference  inout = FirebaseDatabase.instance
+        .reference()
+        .child('Esp/rfid');
+    inout.child('in').set(0);
+    inout.child('out').set(0);
     });
+
     databaseReference.child("Esp").once().then((DataSnapshot snapshot) {
       ledOn = snapshot.value['ledStatus']['ledOn'].toDouble();
       ledOff = snapshot.value['ledStatus']['ledOff'].toDouble();
-
-      uidIn = snapshot.value['rfid']['in'];
-      uidOut = snapshot.value['rfid']['out'];
+      uidIn = snapshot.value['rfid']['in'].toString();
+      uidOut = snapshot.value['rfid']['out'].toString();
       print(uidIn);
      });
 

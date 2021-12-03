@@ -24,6 +24,10 @@ class _regionState extends State<region> {
       home: Scaffold(
         backgroundColor: ba1color,
         appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
           automaticallyImplyLeading: true, //false
           //actions: <Widget>[new Container(),],
           title: // Center(child:
