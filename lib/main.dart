@@ -6,11 +6,11 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
 
-String ip="192.168.1.109";
+String ip="192.168.1.114";
 
 List<Bus> inBus;
 List<String> strs= ["Al-Fara","Tubas", "Tammon", "Badhan","Talluza","Nasariah","Beta","Aqraba","Asira","Hawara","Salem","Rojib"];
-
+var pasns = new Map();
 Color apcolor = const Color(0xFF1ABC9C);
 Color apBcolor = const Color(0xFF00796B);
 Color iconBack = const Color(0xFF0e6655);
@@ -101,10 +101,9 @@ class MyApp extends StatefulWidget {
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
-
+DatabaseReference espRef = FirebaseDatabase.instance.reference().child('Esp');
 class _MyHomePageState extends State<MyApp> {
   final databaseReference = FirebaseDatabase.instance.reference();
-  DatabaseReference espRef = FirebaseDatabase.instance.reference().child('Esp');
 
   double ledOn = 0;
 
@@ -150,6 +149,7 @@ class _MyHomePageState extends State<MyApp> {
               .child('Esp/lcd/$region');
 
           regs.set(lcd);
+          pasns[region] = lcd.toString();
 
 
         } else{
@@ -166,6 +166,7 @@ class _MyHomePageState extends State<MyApp> {
   }
 
   void checkOut(String uid){
+
     if(inBus.isNotEmpty){
     int x=inBus.indexWhere((bus) => bus.uid==uid);
     String p=inBus[x].region;
@@ -186,9 +187,13 @@ class _MyHomePageState extends State<MyApp> {
         .reference()
         .child('Esp/lcd/$p');
     regs.set(lcd);
+    setState(() {
 
+      pasns[p] = lcd.toString();
+    });
 
-    }}
+    }
+   }
 
 
   @override
@@ -207,6 +212,8 @@ class _MyHomePageState extends State<MyApp> {
         .child('Esp/lcd');
      for(int i=0;i<12;i++){
        LCD.child('${strs[i]}').set(0);
+       pasns[strs[i]] = '0';
+
      }
     DatabaseReference  inout = FirebaseDatabase.instance
         .reference()
@@ -265,6 +272,12 @@ class _MyHomePageState extends State<MyApp> {
                 crossAxisSpacing: 10.0,
                 mainAxisSpacing: 10.0,
                 children: List.generate(choices.length, (index) {
+              /*    espRef.child('lcd').child('${choices[index].name}').onValue.listen((event) {
+                    pasns[choices[index].name] =event.snapshot.value.toString();
+                    setState(() {
+
+                    });
+                  });*/
                   return SelectCard(choice: choices[index]);
                 }))));
   }
@@ -314,6 +327,7 @@ class Choice {
   const Choice({this.title,this.name}); //, this.icon
   final String title;
   final String name;
+
   //final IconData icon;
 }
 
@@ -336,11 +350,11 @@ const List<Choice> choices = const <Choice>[
 ];
 
 class SelectCard extends StatelessWidget {
-  const SelectCard({Key key, this.choice}) : super(key: key);
+   SelectCard({Key key, this.choice }) : super(key: key);
   final Choice choice;
-
   @override
   Widget build(BuildContext context) {
+
     return //Card(
         //color: apcolor,
         //child: //Center(
@@ -358,9 +372,9 @@ class SelectCard extends StatelessWidget {
         );
       },
       child: Text(
-        choice.title,
+        pasns[choice.name]+ "  " +  choice.title  ,
         style: TextStyle(
-          fontSize: 29,
+          fontSize: 27,
           fontFamily: 'ArefRuqaaR',
           color: Colors.white,
         ),
