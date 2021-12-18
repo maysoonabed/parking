@@ -21,10 +21,28 @@ MFRC522 mfrc522_out(SS_PIN2, RST_PIN);
 
 static const int servoPin = 4;
 static const int servoPin2 = 13;
-
 Servo servo1;
 Servo servOut;
+//********Ultrasonic*********
+const int trigPin = 0;//5
+const int echoPin = 16;//18
+const int ZamorPin = 14;
+//define sound speed in cm/uS
+#define SOUND_SPEED 0.034
+#define CM_TO_INCH 0.393701
+long duration;
+float distanceCm;
 
+bool USflag=true;
+
+hw_timer_t * timer2 = NULL;
+void IRAM_ATTR onTimer2(){
+    digitalWrite(ZamorPin, HIGH);
+    Serial.print("Distance (cm): ");
+    Serial.println(distanceCm);
+    Serial.println("******************************");
+}
+//***************************
 
 #define FIREBASE_HOST "mysonp-e7463-default-rtdb.firebaseio.com/" //Do not include https:// in FIREBASE_HOST
 #define FIREBASE_AUTH "F1X5G48TyRCdhAFxx4OPxEWcDoOSIpbyvn5kLuWh"
@@ -49,8 +67,9 @@ hw_timer_t * timer = NULL;
 hw_timer_t * timer1 = NULL;
 void IRAM_ATTR onTimer(){
   for(int posDegrees = 0; posDegrees <= 100; posDegrees++) {
+             //Serial.println(posDegrees);
+             //delay(20);
              servo1.write(posDegrees);
-             //delay(100);
   }
 }
 void IRAM_ATTR onTimer1(){
@@ -108,8 +127,14 @@ for (int i=0;i<4;i++){
   lcd.print("0");
   lcd.setCursor(19, i);
   lcd.print("0");
-  
-}}
+}
+
+//********Ultrasonic*********
+  pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
+  pinMode(echoPin, INPUT); // Sets the echoPin as an Input
+  pinMode(ZamorPin, OUTPUT);
+//***************************
+}
 
 void loop() {
   //*************************************************************************
@@ -249,7 +274,7 @@ else
   }
   Serial.println("------------------------------------");
   Serial.println("Push integer test...");
-  }
+}
 //************************************************************************* 
   for (int i=0;i<12;i++){
     if (Firebase.getInt(firebaseData, "Esp/lcd/"+strs[i]))
@@ -270,6 +295,34 @@ else
     }
    }
 //*************************************************************************
+
+//********Ultrasonic*********
+// Clears the trigPin
+digitalWrite(trigPin, LOW);
+delayMicroseconds(2);
+// Sets the trigPin on HIGH state for 10 micro seconds
+digitalWrite(trigPin, HIGH);
+delayMicroseconds(10);
+digitalWrite(trigPin, LOW);
+duration = pulseIn(echoPin, HIGH);
+distanceCm = duration * SOUND_SPEED/2;
+if(distanceCm<=5){
+   //أول مرة بفحص اذا المسافة أقل من 5 وفيه حال أول مرة ببلش التايمر فيه حال ما كان أول مرة بضل التايمر يعد 
+   //********Timer********* 
+     if(USflag==true){//First Time
+       timer2 = timerBegin(2, 80, true);
+       timerAttachInterrupt(timer2, &onTimer2, true);
+       timerAlarmWrite(timer2, 100000000, false);//true//300sec=3minute
+       timerAlarmEnable(timer2);
+       USflag=false; 
+     }
+    //**********************
+}else{
+    USflag=true;
+    digitalWrite(ZamorPin, LOW);
+  }
+//***************************
+
 }
 
 //*************************************************************************

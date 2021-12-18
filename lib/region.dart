@@ -16,7 +16,6 @@ class region extends StatefulWidget {
 
 class _regionState extends State<region> {
   DatabaseReference regRef = FirebaseDatabase.instance.reference().child('Esp');
-  String r = "";
   @override
   Widget build(BuildContext context) {
     // print(widget.reg);
@@ -33,7 +32,7 @@ class _regionState extends State<region> {
             //actions: <Widget>[new Container(),],
             title: // Center(child:
                 Text(
-              "OtoBus", //r == "" ? "OtoBus" : r,
+              widget.reg,
               style: TextStyle(
                 fontSize: 25,
                 fontFamily: 'Pacifico',
@@ -46,7 +45,6 @@ class _regionState extends State<region> {
           body: ListView.builder(
             itemCount: inBus.length,
             itemBuilder: (context, i) {
-              r = inBus[i].region;
               regRef
                   .child('region')
                   .child(inBus[i].region)
