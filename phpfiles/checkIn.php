@@ -13,7 +13,8 @@
     $json['passengers']=$row['passengers'];
     $json['region']=$row['region'];
     $json['hay']=1;
- }else        $json['hay']=0;
+ }else       
+    $json['hay']=0;
 
 
 

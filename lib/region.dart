@@ -8,8 +8,9 @@ import 'main.dart';
 double num = 0;
 
 class region extends StatefulWidget {
-  final String reg;
-  region(this.reg);
+  final String arreg;
+  final String engreg;
+  region(this.engreg, this.arreg);
   @override
   _regionState createState() => _regionState();
 }
@@ -32,7 +33,7 @@ class _regionState extends State<region> {
             //actions: <Widget>[new Container(),],
             title: // Center(child:
                 Text(
-              widget.reg,
+              widget.engreg,
               style: TextStyle(
                 fontSize: 25,
                 fontFamily: 'Pacifico',
@@ -58,7 +59,7 @@ class _regionState extends State<region> {
                 });
               });
 
-              return inBus[i].region == widget.reg
+              return inBus[i].region == widget.engreg
                   ? Padding(
                       padding: EdgeInsets.all(8.0),
                       child: Card(

@@ -9,6 +9,7 @@ import 'dart:io';
 String ip = "192.168.1.108:8089"; //192.168.1.114
 
 List<Bus> inBus;
+List<region> rglist;
 List<String> strs = [
   "Al-Fara",
   "Tubas",
@@ -120,7 +121,6 @@ DatabaseReference espRef = FirebaseDatabase.instance.reference().child('Esp');
 
 class _MyHomePageState extends State<MyApp> {
   final databaseReference = FirebaseDatabase.instance.reference();
-
   double ledOn = 0;
 
   double ledOff = 0;
@@ -175,6 +175,25 @@ class _MyHomePageState extends State<MyApp> {
     }
   }
 
+//*******************************************************************/
+  getList() async {
+    String apiurl = "http://$ip/parking/phpfiles/GetRegions.php"; //10.0.0.8//
+    var response = await http.post(apiurl, body: {});
+
+    if (response.statusCode == 200) {
+      var jsondata = jsonDecode(response.body);
+      setState(() {
+        String arname = jsondata['arname'];
+        String engname = jsondata['engname'];
+        region rg = region(engname, arname);
+        rglist.add(rg);
+      });
+    } else {
+      print("حدث خطأ أثناء الاتصال بالشبكة");
+    }
+  }
+
+//*******************************************************************/
   void checkOut(String uid) {
     if (inBus.isNotEmpty) {
       int x = inBus.indexWhere((bus) => bus.uid == uid);
@@ -255,6 +274,7 @@ class _MyHomePageState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    //getList();
     return MaterialApp(
         debugShowCheckedModeBanner: false, //لإخفاء شريط depug
         home: Scaffold(
@@ -339,6 +359,7 @@ class Choice {
 }
 
 const List<Choice> choices = const <Choice>[
+  //list from database
   const Choice(title: 'طوباس', name: "Tubas"),
   const Choice(title: 'طمون', name: "Tammon"),
   const Choice(title: 'الفارعة', name: "Al-Fara"),
@@ -374,7 +395,7 @@ class SelectCard extends StatelessWidget {
         //Navigator.push(context, )
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => region(choice.name)),
+          MaterialPageRoute(builder: (context) => region(choice.name, "")),
         );
       },
       child: Column(children: [
