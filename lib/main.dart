@@ -6,7 +6,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
 
-String ip = "192.168.1.108:8089"; //192.168.1.114
+//String ip = "192.168.1.108:8089"; //192.168.1.114
+String ip = "192.168.1.114";
 
 List<Bus> inBus;
 List<region> rglist;
@@ -121,14 +122,12 @@ DatabaseReference espRef = FirebaseDatabase.instance.reference().child('Esp');
 
 class _MyHomePageState extends State<MyApp> {
   final databaseReference = FirebaseDatabase.instance.reference();
-  double ledOn = 0;
 
-  double ledOff = 0;
   String uidIn = "";
   String uidOut = "";
 
   chekIn(String uid) async {
-    String apiurl = "http://$ip/parking/phpfiles/checkIn.php"; //10.0.0.8//
+    String apiurl = "https://$ip/parking/phpfiles/checkIn.php"; //10.0.0.8//
     var response = await http.post(apiurl, body: {
       'uid': uid, //get the username text
     });
@@ -150,8 +149,7 @@ class _MyHomePageState extends State<MyApp> {
           b.taken = 0;
           inBus.add(b);
 
-          _turnOnLed();
-          DatabaseReference pass = FirebaseDatabase.instance
+           DatabaseReference pass = FirebaseDatabase.instance
               .reference()
               .child('Esp/region/$region/$uid');
           pass.set(0);
@@ -159,14 +157,10 @@ class _MyHomePageState extends State<MyApp> {
           for (int i = 0; i < inBus.length; i++) {
             if (inBus[i].region == b.region) lcd++;
           }
-          DatabaseReference regs =
-              FirebaseDatabase.instance.reference().child('Esp/lcd/$region');
 
-          regs.set(lcd);
           pasns[region] = lcd.toString();
         } else {
-          _turnOffLed();
-          print("no hay");
+           print("no hay");
         }
         for (int i = 0; i < inBus.length; i++) print(inBus[i].uid);
       });
@@ -210,9 +204,6 @@ class _MyHomePageState extends State<MyApp> {
       for (int i = 0; i < inBus.length; i++) {
         if (inBus[i].region == p) lcd++;
       }
-      DatabaseReference regs =
-          FirebaseDatabase.instance.reference().child('Esp/lcd/$p');
-      regs.set(lcd);
       setState(() {
         pasns[p] = lcd.toString();
       });
@@ -229,24 +220,14 @@ class _MyHomePageState extends State<MyApp> {
       reg.onDisconnect();
       reg.remove();
       reg = null;
-      DatabaseReference LCD =
-          FirebaseDatabase.instance.reference().child('Esp/lcd');
+
       for (int i = 0; i < 12; i++) {
-        LCD.child('${strs[i]}').set(0);
         pasns[strs[i]] = '0';
       }
       DatabaseReference inout =
           FirebaseDatabase.instance.reference().child('Esp/rfid');
       inout.child('in').set(0);
       inout.child('out').set(0);
-    });
-
-    databaseReference.child("Esp").once().then((DataSnapshot snapshot) {
-      ledOn = snapshot.value['ledStatus']['ledOn'].toDouble();
-      ledOff = snapshot.value['ledStatus']['ledOff'].toDouble();
-      uidIn = snapshot.value['rfid']['in'].toString();
-      uidOut = snapshot.value['rfid']['out'].toString();
-      print(uidIn);
     });
 
     espRef.child('rfid').child('in').onValue.listen((event) {
@@ -258,18 +239,13 @@ class _MyHomePageState extends State<MyApp> {
         }
       }
       if (ch == true) {
-        print("trueeeee");
-        chekIn(inr);
-      } else {
-        print("false");
-        _turnOffLed();
+         chekIn(inr);
       }
     });
 
     espRef.child('rfid').child('out').onValue.listen((event) {
       checkOut(event.snapshot.value.toString());
-      _turnOnLed2();
-    });
+     });
   }
 
   @override
@@ -301,53 +277,11 @@ class _MyHomePageState extends State<MyApp> {
                 crossAxisSpacing: 10.0,
                 mainAxisSpacing: 10.0,
                 children: List.generate(choices.length, (index) {
-                  /*    espRef.child('lcd').child('${choices[index].name}').onValue.listen((event) {
-                    pasns[choices[index].name] =event.snapshot.value.toString();
-                    setState(() {
 
-                    });
-                  });*/
                   return SelectCard(choice: choices[index]);
                 }))));
   }
 
-  void _turnOnLed() {
-    databaseReference.child("Esp/ledStatus").update({
-      'ledOn': 1,
-    });
-    setState(() {
-      ledOn = 1;
-    });
-  }
-
-  void _turnOffLed() {
-    print("fngjknrkwt");
-    databaseReference.child("Esp/ledStatus").update({
-      'ledOn': 0,
-    });
-    setState(() {
-      ledOn = 0;
-    });
-  }
-
-  void _turnOnLed2() {
-    databaseReference.child("Esp/ledStatus").update({
-      'ledOff': 1,
-    });
-    setState(() {
-      ledOff = 1;
-    });
-  }
-
-  void _turnOffLed2() {
-    databaseReference.child("Esp/ledStatus").update({
-      'ledOff': 0,
-    });
-
-    setState(() {
-      ledOff = 0;
-    });
-  }
 }
 
 class Choice {
