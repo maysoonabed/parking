@@ -97,6 +97,8 @@ void IRAM_ATTR onTimer1() {
 }
 //**********************
 void setup() {
+
+
   // initialize LCD
   lcd.begin();
   // turn on LCD backlight
@@ -132,6 +134,8 @@ void setup() {
   mfrc522_out.PCD_DumpVersionToSerial();
 
   Serial.println(F("Scan PICC to see UID, SAK, type, and data blocks..."));
+
+
 
   for (int i = 0; i < 4; i++) {
     lcd.setCursor(0, i);
@@ -350,13 +354,16 @@ void loop() {
   digitalWrite(trigPin, LOW);
   duration = pulseIn(echoPin, HIGH);
   distanceCm = duration * SOUND_SPEED / 2;
+  Serial.print("Distance (cm): ");
+  Serial.println(distanceCm);
+  Serial.println("******************************");
   if (distanceCm <= 5) {
     //أول مرة بفحص اذا المسافة أقل من 5 وفيه حال أول مرة ببلش التايمر فيه حال ما كان أول مرة بضل التايمر يعد
     //********Timer*********
     if (USflag == true) { //First Time
       timer2 = timerBegin(2, 80, true);
       timerAttachInterrupt(timer2, &onTimer2, true);
-      timerAlarmWrite(timer2, 10000000, false);//true//300sec=3minute
+      timerAlarmWrite(timer2, 100000000, false);//true//300sec=3minute
       timerAlarmEnable(timer2);
       USflag = false;
     }
