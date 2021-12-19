@@ -17,6 +17,7 @@ dependencies:
   mqtt_client: ^8.2.0
   provider: ^4.3.3
   percent_indicator: ^2.1.9
+  json_serializable: ^3.5.1
 
 
 dev_dependencies:
