@@ -31,7 +31,7 @@ StaticJsonDocument<200> doc;
 StaticJsonDocument<2000> doc1;
 
 
-static const int servoPin = 4;
+static const int servoPin = 25;
 static const int servoPin2 = 13;
 Servo servo1;
 Servo servOut;
@@ -50,7 +50,7 @@ bool t1 = false;
 bool t = false;
 
 hw_timer_t * timer2 = NULL;
- 
+
 void IRAM_ATTR onTimer2() {
   digitalWrite(ZamorPin, HIGH);
   Serial.print("Distance (cm): ");
@@ -96,12 +96,24 @@ void IRAM_ATTR onTimer() {
 }
 void IRAM_ATTR onTimer1() {
   t1 = true;
+  Serial.println("exit");
 
 }
+//*********LCD*************
+int lcdNum = 0;
+bool lcdFlag = true;
+hw_timer_t * timer3 = NULL;
+
+void IRAM_ATTR onTimer3() {
+
+  // lcd.clear();
+  lcdNum = lcdNum + 1 > regNum ? 0 : lcdNum + 2 ;
+  Serial.println("LCD timer");
+  lcdFlag = true;
+}
 //**********************
+
 void setup() {
-
-
   // initialize LCD
   lcd.begin();
   // turn on LCD backlight
@@ -149,7 +161,7 @@ void setup() {
     //check for a return code - This is more for debugging.
     String response1 = http1.getString();
     Serial.println(httpResponseCode1);
-    Serial.println(response1);
+    //   Serial.println(response1);
 
     //////////////////////
     // Deserialize the JSON document
@@ -164,10 +176,8 @@ void setup() {
 
     regNum = doc1["num"];
     for (int r = 0; r < regNum; r++) {
-
       const char *x = doc1[strsIn[r]]["engname"];
-      Serial.println(x);
-
+      //    Serial.println(x);
       strs[r] = x;
     }
 
@@ -185,16 +195,16 @@ void setup() {
   Serial.println(F("Scan PICC to see UID, SAK, type, and data blocks..."));
 
 
-  for (int i = 0; i < 4; i++) {
-    lcd.setCursor(0, i);
-    lcd.print(strs[i]);
-    lcd.setCursor(10, i);
-    lcd.print(strs[i + 4]);
-    lcd.setCursor(8, i);
-    lcd.print("0");
-    lcd.setCursor(19, i);
-    lcd.print("0");
-  }
+  //  for (int i = 0; i < 4; i++) {
+  //    lcd.setCursor(0, i);
+  //    lcd.print(strs[i]);
+  //    lcd.setCursor(10, i);
+  //    lcd.print(strs[i + 4]);
+  //    lcd.setCursor(8, i);
+  //    lcd.print("0");
+  //    lcd.setCursor(19, i);
+  //    lcd.print("0");
+  //  }
 
   //********Ultrasonic*********
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
@@ -205,6 +215,30 @@ void setup() {
 
 void loop() {
 
+  //********LCD*********
+  if (lcdFlag == true) {
+    //    for (int i = 0; i < 4; i++) {
+    //      lcd.setCursor(0, i);
+    //      lcd.print("                    ");
+    //    }
+    lcd.clear();
+    for (int i = 0; i < 4; i++) {
+      lcd.setCursor(0, i);
+      lcd.print(strs[(lcdNum + i) % regNum]);
+      lcd.setCursor(10, i);
+      lcd.print(strs[(lcdNum + i + 4) % regNum]);
+      lcd.setCursor(8, i);
+      lcd.print(num[(lcdNum + i) % regNum]);
+      lcd.setCursor(19, i);
+      lcd.print(num[(lcdNum + i + 4) % regNum ]);
+    }
+    timer3 = timerBegin(3, 80, true);
+    timerAttachInterrupt(timer3, &onTimer3, true);
+    timerAlarmWrite(timer3, 10000000, false);//true//300sec=3minute
+    timerAlarmEnable(timer3);
+    lcdFlag = false;
+  }
+  //**********************
   if (t == true) {
     Firebase.setString(firebaseData, "/Esp/rfid/in", "0");
     for (int posDegrees = 0; posDegrees <= 100; posDegrees++) {
@@ -318,8 +352,9 @@ void loop() {
       {
         if (strs[i] == reg) {
           num[i]++;
-          lcd.setCursor(11 * (i / 4) + 8, i % 4);
-          lcd.print(num[i]);
+          updateLCD(i);
+          break;
+
         }
       }
     }
@@ -357,14 +392,18 @@ void loop() {
           servOut.write(posDegrees);
           delay(20);
         }
-
+        //********Timer*********
+        timer1 = timerBegin(1, 80, true);
+        timerAttachInterrupt(timer1, &onTimer1, true);
+        timerAlarmWrite(timer1, 8000000, false);//true
+        timerAlarmEnable(timer1);
+        //**********************
 
         for (int i = 0; i < 50; i++)
         {
           if (strs[i] ==  rgs[x]) {
             num[i]--;
-            lcd.setCursor(9 * (i / 8) + 8, i % 4);
-            lcd.print(num[i]);
+            updateLCD(i);
             break;
           }
         }
@@ -418,4 +457,17 @@ void loop() {
   }
   //***************************
 
+}
+void updateLCD(int x) {
+  for (int i = 0; i < 4; i++) {
+    if (x == (lcdNum + i) % regNum) {
+      lcd.setCursor(8, i);
+      lcd.print(num[(lcdNum + i) % regNum]);
+    }
+    if (x == (lcdNum + i + 4) % regNum) {
+      lcd.setCursor(19, i);
+      lcd.print(num[(lcdNum + i + 4) % regNum ]);
+    }
+  }
+  Serial.println("Update LCD ");
 }
