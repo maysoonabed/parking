@@ -9,8 +9,9 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
+const char * strsIn[50] = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49"};
 
-String strs[12] = {"Al-Fara", "Tubas", "Tammon", "Badhan", "Talluza", "Nasariah", "Beta", "Aqraba", "Asira", "Hawara", "Salem", "Rojib"};
+String strs[50] = {""};
 String ins[50] = {""};
 String rgs[50] = {""};
 
@@ -27,6 +28,7 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
 MFRC522 mfrc522_out(SS_PIN2, RST_PIN);
 
 StaticJsonDocument<200> doc;
+StaticJsonDocument<2000> doc1;
 
 
 static const int servoPin = 4;
@@ -48,6 +50,7 @@ bool t1 = false;
 bool t = false;
 
 hw_timer_t * timer2 = NULL;
+ 
 void IRAM_ATTR onTimer2() {
   digitalWrite(ZamorPin, HIGH);
   Serial.print("Distance (cm): ");
@@ -76,7 +79,7 @@ const char* serverName = "http://192.168.1.114/parking/phpfiles/esp.php";
 
 // Define Firebase Data Object
 FirebaseData firebaseData;
-
+int regNum;
 // Root Path
 String path = "/Esp/ledStatus";
 
@@ -133,8 +136,53 @@ void setup() {
   mfrc522_out.PCD_Init();
   mfrc522_out.PCD_DumpVersionToSerial();
 
-  Serial.println(F("Scan PICC to see UID, SAK, type, and data blocks..."));
 
+
+  //*****************************************************************************************************
+
+  HTTPClient http1;
+  http1.begin("http://192.168.1.114/parking/phpfiles/espRegions.php");
+  http1.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  int httpResponseCode1 = http1.POST("");
+
+  if (httpResponseCode1 > 0) {
+    //check for a return code - This is more for debugging.
+    String response1 = http1.getString();
+    Serial.println(httpResponseCode1);
+    Serial.println(response1);
+
+    //////////////////////
+    // Deserialize the JSON document
+    DeserializationError error1 = deserializeJson(doc1, response1);
+
+    // Test if parsing succeeds.
+    if (error1) {
+      Serial.print(F("deserializeJson() failed: "));
+      Serial.println(error1.f_str());
+      return;
+    }
+
+    regNum = doc1["num"];
+    for (int r = 0; r < regNum; r++) {
+
+      const char *x = doc1[strsIn[r]]["engname"];
+      Serial.println(x);
+
+      strs[r] = x;
+    }
+
+    ////////////////////////////
+  }
+  else {
+    Serial.print("Error on sending post");
+    Serial.println(httpResponseCode1);
+  }
+  //closde the HTTP request.
+  http1.end();
+
+
+  //***************************************************************************************************
+  Serial.println(F("Scan PICC to see UID, SAK, type, and data blocks..."));
 
 
   for (int i = 0; i < 4; i++) {
@@ -266,11 +314,11 @@ void loop() {
       /* Start an alarm */
       timerAlarmEnable(timer);
       //**********************
-      for (int i = 0; i < 12; i++)
+      for (int i = 0; i < 50; i++)
       {
         if (strs[i] == reg) {
           num[i]++;
-          lcd.setCursor(9 * (i / 8) + 8, i % 4);
+          lcd.setCursor(11 * (i / 4) + 8, i % 4);
           lcd.print(num[i]);
         }
       }
@@ -309,19 +357,15 @@ void loop() {
           servOut.write(posDegrees);
           delay(20);
         }
-        //********Timer*********
-        timer1 = timerBegin(1, 80, true);
-        timerAttachInterrupt(timer1, &onTimer1, true);
-        timerAlarmWrite(timer1, 8000000, false);//true
-        timerAlarmEnable(timer1);
-        //**********************
 
-        for (int i = 0; i < 12; i++)
+
+        for (int i = 0; i < 50; i++)
         {
           if (strs[i] ==  rgs[x]) {
             num[i]--;
             lcd.setCursor(9 * (i / 8) + 8, i % 4);
             lcd.print(num[i]);
+            break;
           }
         }
 
@@ -354,9 +398,9 @@ void loop() {
   digitalWrite(trigPin, LOW);
   duration = pulseIn(echoPin, HIGH);
   distanceCm = duration * SOUND_SPEED / 2;
-  Serial.print("Distance (cm): ");
-  Serial.println(distanceCm);
-  Serial.println("******************************");
+  //  Serial.print("Distance (cm): ");
+  //  Serial.println(distanceCm);
+  //  Serial.println("******************************");
   if (distanceCm <= 5) {
     //أول مرة بفحص اذا المسافة أقل من 5 وفيه حال أول مرة ببلش التايمر فيه حال ما كان أول مرة بضل التايمر يعد
     //********Timer*********
