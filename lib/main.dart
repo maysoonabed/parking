@@ -134,10 +134,7 @@ class _MyHomePageState extends State<MyApp> {
           b.taken = 0;
           inBus.add(b);
 
-           DatabaseReference pass = FirebaseDatabase.instance
-              .reference()
-              .child('Esp/region/$region/$uid');
-          pass.set(0);
+
           int lcd = 0;
           for (int i = 0; i < inBus.length; i++) {
             if (inBus[i].region == b.region) lcd++;
@@ -160,12 +157,6 @@ class _MyHomePageState extends State<MyApp> {
     if (inBus.isNotEmpty) {
       int x = inBus.indexWhere((bus) => bus.uid == uid);
       String p = inBus[x].region;
-      DatabaseReference pass =
-          FirebaseDatabase.instance.reference().child('Esp/region/$p/$uid');
-      pass.onDisconnect();
-      pass.remove();
-      pass = null;
-
       inBus.removeAt(x);
 
       int lcd = 0;

@@ -365,6 +365,8 @@ void loop() {
         }
       }
       Firebase.setString(firebaseData, "/Esp/rfid/in", buffer);
+      String rin(reg);
+      Firebase.setInt(firebaseData, "/Esp/region/"+rin+"/"+rc,0);
       //*************************************************************************
 
       for (int posDegrees = 100; posDegrees >= 0; posDegrees--) {
@@ -422,6 +424,8 @@ void loop() {
       if (ins[x] == ro) {
         b = false;
         Firebase.setString(firebaseData, "/Esp/rfid/out", buffer);
+        Firebase.deleteNode(firebaseData,"/Esp/region/"+rgs[x]+"/"+ro);
+
         for (int posDegrees = 0; posDegrees <= 100; posDegrees++)
         {
           servOut.write(posDegrees);
