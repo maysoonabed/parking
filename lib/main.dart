@@ -184,16 +184,19 @@ class _MyHomePageState extends State<MyApp> {
     setState(() {
       inBus = [];
       DatabaseReference reg =
-          FirebaseDatabase.instance.reference().child('Esp/region');
+      FirebaseDatabase.instance.reference().child('Esp/region');
       reg.onDisconnect();
       reg.remove();
       reg = null;
 
 
       DatabaseReference inout =
-          FirebaseDatabase.instance.reference().child('Esp/rfid');
+      FirebaseDatabase.instance.reference().child('Esp/rfid');
       inout.child('in').set(0);
       inout.child('out').set(0);
+      DatabaseReference rst =
+      FirebaseDatabase.instance.reference().child('Esp/reset');
+      rst.set(1);
     });
 
     espRef.child('rfid').child('in').onValue.listen((event) {

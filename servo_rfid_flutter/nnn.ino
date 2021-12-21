@@ -18,7 +18,7 @@ String rgs[50] = {""};
 char *str;
 int hay  ;
 const char *reg;
-int num[12] =  { 0 };
+int num[50] =  { 0 };
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
 #define RST_PIN         22          // Configurable, see typical pin layout above
@@ -175,12 +175,35 @@ void setup() {
     }
 
     regNum = doc1["num"];
+    Serial.println(regNum);
     for (int r = 0; r < regNum; r++) {
       const char *x = doc1[strsIn[r]]["engname"];
       //    Serial.println(x);
       strs[r] = x;
     }
+    if (regNum < 5) {
+      lcdFlag = false;
+      for (int i = 0; i < 4; i++) {
+        lcd.setCursor(2, i);
+        lcd.print(strs[i]);
+        lcd.setCursor(17, i);
+        lcd.print(num[i]);
 
+      }
+    }
+    else if (regNum < 9) {
+      lcdFlag = false;
+      for (int i = 0; i < 4; i++) {
+        lcd.setCursor(0, i);
+        lcd.print(strs[i]);
+        lcd.setCursor(10, i);
+        lcd.print(strs[i + 4]);
+        lcd.setCursor(8, i);
+        lcd.print(num[i]);
+        lcd.setCursor(19, i);
+        lcd.print(num[i + 4]);
+      }
+    }
     ////////////////////////////
   }
   else {
@@ -215,6 +238,17 @@ void setup() {
 
 void loop() {
 
+  if (Firebase.getInt(firebaseData, "Esp/reset"))
+  {
+
+    int x =   firebaseData.intData() ;
+    if (x == 1) {
+      Firebase.setInt(firebaseData, "/Esp/reset", 0);
+      ESP.restart();
+    }
+  }
+
+
   //********LCD*********
   if (lcdFlag == true) {
     //    for (int i = 0; i < 4; i++) {
@@ -222,6 +256,7 @@ void loop() {
     //      lcd.print("                    ");
     //    }
     lcd.clear();
+
     for (int i = 0; i < 4; i++) {
       lcd.setCursor(0, i);
       lcd.print(strs[(lcdNum + i) % regNum]);
@@ -459,14 +494,21 @@ void loop() {
 
 }
 void updateLCD(int x) {
-  for (int i = 0; i < 4; i++) {
-    if (x == (lcdNum + i) % regNum) {
-      lcd.setCursor(8, i);
-      lcd.print(num[(lcdNum + i) % regNum]);
-    }
-    if (x == (lcdNum + i + 4) % regNum) {
-      lcd.setCursor(19, i);
-      lcd.print(num[(lcdNum + i + 4) % regNum ]);
+  if (regNum < 5) {
+    lcd.setCursor(17, x);
+    lcd.print(num[x]);
+  }
+
+  else {
+    for (int i = 0; i < 4; i++) {
+      if (x == (lcdNum + i) % regNum) {
+        lcd.setCursor(8, i);
+        lcd.print(num[(lcdNum + i) % regNum]);
+      }
+      if (x == (lcdNum + i + 4) % regNum) {
+        lcd.setCursor(19, i);
+        lcd.print(num[(lcdNum + i + 4) % regNum ]);
+      }
     }
   }
   Serial.println("Update LCD ");
