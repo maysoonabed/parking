@@ -1,28 +1,68 @@
 <?php
- $connect = mysqli_connect("localhost","root","","parking");
 
+class Constants
+{
+    //DATABASE DETAILS
+    static $DB_SERVER="localhost";
+    static $DB_NAME="parking";
+    static $USERNAME="root";
+    static $PASSWORD="";
 
-    //$row = mysqli_fetch_assoc($result);
-    //$json['arname']=$row['arname'];
-    //$json['engname']=$row['engname'];
+    //STATEMENTS
+    static $SQL_SELECT_ALL="SELECT * FROM regions";
 
- $query = "SELECT * FROM `regions`";
- $result = $connect->query($query);
- if($result->num_rows>0)
-    {   
-        $spacecrafts=array();
-        while($row=$result->fetch_array())
-         {
-            array_push($spacecrafts, array("arname"=>$row['arname'],"engname"=>$row['engname']));
-            echo $spacecrafts;
-         }
-        //print(json_encode(array_reverse($spacecrafts)));
- }else
+}
+
+class Spacecrafts
+{
+    /*******************************************************************************************************************************************/
+    /*
+       1.CONNECT TO DATABASE.
+       2. RETURN CONNECTION OBJECT
+    */
+    public function connect()
     {
-        print(json_encode(array("PHP EXCEPTION : CAN'T RETRIEVE FROM MYSQL. ")));
-     }
-        
- echo json_encode($json);
- mysqli_close($connect);
+        $con=new mysqli(Constants::$DB_SERVER,Constants::$USERNAME,Constants::$PASSWORD,Constants::$DB_NAME);
+        if($con->connect_error)
+        {
+            // echo "Unable To Connect"; - For debug
+            return null;
+        }else
+        {
+            //echo "Connected"; - For debug
+            return $con;
+        }
+    }
+    /*******************************************************************************************************************************************/
+    /*
+       1.SELECT FROM DATABASE.
+    */
+    public function select()
+    {
+        $con=$this->connect();
+        if($con != null)
+        {
+            $result=$con->query(Constants::$SQL_SELECT_ALL);
+            if($result->num_rows>0)
+            {
+                $spacecrafts=array();
+                while($row=$result->fetch_array())
+                {
+                    array_push($spacecrafts, array("engname"=>$row['engname'],"arname"=>$row['arname']));
+                }
+                print(json_encode(array_reverse($spacecrafts)));
+            }else
+            {
+                print(json_encode(array("PHP EXCEPTION : CAN'T RETRIEVE FROM MYSQL. ")));
+            }
+            $con->close();
 
-?>
+        }else{
+            print(json_encode(array("PHP EXCEPTION : CAN'T CONNECT TO MYSQL. NULL CONNECTION.")));
+        }
+    }
+}
+$spacecrafts=new Spacecrafts();
+$spacecrafts->select();
+
+//end

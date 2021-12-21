@@ -3,28 +3,13 @@ import 'package:parking/region.dart';
 import 'package:parking/bus.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/http.dart' show get;
 import 'dart:convert';
 import 'dart:io';
 
 //String ip = "192.168.1.108:8089"; //192.168.1.114
 String ip = "192.168.1.114";
-
 List<Bus> inBus;
-List<region> rglist;
-List<String> strs = [
-  "Al-Fara",
-  "Tubas",
-  "Tammon",
-  "Badhan",
-  "Talluza",
-  "Nasariah",
-  "Beta",
-  "Aqraba",
-  "Asira",
-  "Hawara",
-  "Salem",
-  "Rojib"
-];
 var pasns = new Map();
 Color apcolor = const Color(0xFF1ABC9C);
 Color apBcolor = const Color(0xFF00796B);
@@ -169,23 +154,6 @@ class _MyHomePageState extends State<MyApp> {
     }
   }
 
-//*******************************************************************/
-  getList() async {
-    String apiurl = "http://$ip/parking/phpfiles/GetRegions.php"; //10.0.0.8//
-    var response = await http.post(apiurl, body: {});
-
-    if (response.statusCode == 200) {
-      var jsondata = jsonDecode(response.body);
-      setState(() {
-        String arname = jsondata['arname'];
-        String engname = jsondata['engname'];
-        region rg = region(engname, arname);
-        rglist.add(rg);
-      });
-    } else {
-      print("حدث خطأ أثناء الاتصال بالشبكة");
-    }
-  }
 
 //*******************************************************************/
   void checkOut(String uid) {
@@ -221,9 +189,7 @@ class _MyHomePageState extends State<MyApp> {
       reg.remove();
       reg = null;
 
-      for (int i = 0; i < 12; i++) {
-        pasns[strs[i]] = '0';
-      }
+
       DatabaseReference inout =
           FirebaseDatabase.instance.reference().child('Esp/rfid');
       inout.child('in').set(0);
@@ -272,92 +238,138 @@ class _MyHomePageState extends State<MyApp> {
               ),
               backgroundColor: apcolor,
             ),
-            body: GridView.count(
-                crossAxisCount: 3,
-                crossAxisSpacing: 10.0,
-                mainAxisSpacing: 10.0,
-                children: List.generate(choices.length, (index) {
+            body:new Center(
+              //FutureBuilder is a widget that builds itself based on the latest snapshot
+              // of interaction with a Future.
+              child: new FutureBuilder<List<Spacecraft>>(
+                future: downloadJSON(),
+                    builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    List<Spacecraft> spacecrafts = snapshot.data;
 
-                  return SelectCard(choice: choices[index]);
-                }))));
+                    return new CustomListView(spacecrafts);
+                  } else if (snapshot.hasError) {
+                    return Text('${snapshot.error}');
+                  }
+                  //return  a circular progress indicator.
+                  return new CircularProgressIndicator();
+                },
+              ),
+
+            ),
+
+
+        ));
   }
 
 }
 
-class Choice {
-  const Choice({this.title, this.name}); //, this.icon
-  final String title;
-  final String name;
 
-  //final IconData icon;
-}
 
-const List<Choice> choices = const <Choice>[
-  //list from database
-  const Choice(title: 'طوباس', name: "Tubas"),
-  const Choice(title: 'طمون', name: "Tammon"),
-  const Choice(title: 'الفارعة', name: "Al-Fara"),
-  const Choice(title: 'الباذان', name: "Badhan"),
-  const Choice(title: 'طلوزة', name: "Talluza"), //, icon: Icons.camera_alt
-  const Choice(title: 'النصارية', name: "Nasariah"),
-  const Choice(title: 'بيتا', name: "Beta"),
-  const Choice(title: 'عقربة', name: "Aqraba"),
-  const Choice(title: 'عصيرة ', name: "Asira"),
-  /* const Choice(title: 'بيت دجن',name:"Tubas"),
-  const Choice(title: 'بيت فوريك',name:"Tubas"),
-  const Choice(title: 'دير الحطب',name:"Tubas"),*/
-  /* const Choice(title: 'حوارة',name:"Hawara"),
-  const Choice(title: 'سالم',name:"Salem"),
-  const Choice(title: 'روجيب',name:"Rojib"),*/
-];
+class Spacecraft {
+  final String engn;
+  final String arn;
 
-class SelectCard extends StatelessWidget {
-  SelectCard({Key key, this.choice}) : super(key: key);
-  final Choice choice;
-  @override
-  Widget build(BuildContext context) {
-    return //Card(
-        //color: apcolor,
-        //child: //Center(
-        //child: Column(
-        //crossAxisAlignment: CrossAxisAlignment.center,
-        //children: <Widget>[
-        //Expanded(child:Icon(choice.icon, size: 50.0, color: color.white)),
-        ElevatedButton(
-      style: ElevatedButton.styleFrom(primary: apBcolor),
-      onPressed: () {
-        //Navigator.push(context, )
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => region(choice.name, "")),
+  Spacecraft({
+    this.engn,
+    this.arn,
+
+  });
+
+  factory Spacecraft.fromJson(Map<String, dynamic> jsonData) {
+    return Spacecraft(
+      engn: jsonData['engname'],
+      arn: jsonData['arname'],
         );
+  }
+}
+class CustomListView extends StatelessWidget {
+  final List<Spacecraft> spacecrafts;
+
+  CustomListView(this.spacecrafts);
+
+  Widget build(context) {
+    return GridView.builder(
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 200,
+          childAspectRatio: 3 / 2,
+          crossAxisSpacing: 20,
+          mainAxisSpacing: 20),
+      itemCount: spacecrafts.length,
+      itemBuilder: (context, int currentIndex) {
+        int m=0;
+        if (inBus.isNotEmpty) {
+          for (int i = 0; i < inBus.length; i++) {
+            if (inBus[i].region == spacecrafts[currentIndex].engn) m++;
+          }
+        }
+          pasns[spacecrafts[currentIndex].engn] = m.toString();
+        return createViewItem(spacecrafts[currentIndex], context);
       },
-      child: Column(children: [
-        Text(
-          " ",
-          style: TextStyle(
-            fontSize: 10,
-            fontFamily: 'ArefRuqaaR',
-            color: Colors.white,
-          ),
-        ),
-        Text(
-          choice.title,
-          style: TextStyle(
-            fontSize: 33,
-            fontFamily: 'ArefRuqaaR',
-            color: Colors.white,
-          ),
-        ),
-        Text(
-          pasns[choice.name],
-          style: TextStyle(
-              fontSize: 20,
-              //fontFamily: 'ArefRuqaaR',
-              color: Colors.yellow),
-        ),
-      ]), //),
-      //]),
     );
   }
+
+  Widget createViewItem(Spacecraft spacecraft, BuildContext context) {
+    return new ListTile(
+        title: new Card(
+          elevation: 5.0,
+          child: new Container(
+            child:         ElevatedButton(
+              style: ElevatedButton.styleFrom(primary: apBcolor),
+              onPressed: () {
+                 Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => region(  spacecraft.engn, "")),
+                );
+              },
+              child: Column(children: [
+                Text(
+                  " ",
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontFamily: 'ArefRuqaaR',
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  spacecraft.arn,
+                  style: TextStyle(
+                    fontSize: 33,
+                    fontFamily: 'ArefRuqaaR',
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  pasns[  spacecraft.engn],
+                  style: TextStyle(
+                      fontSize: 20,
+                       color: Colors.yellow),
+                ),
+              ]), //),
+              //]),
+            ),
+
+
+
+          ),
+        ),
+        onTap: () {
+         });
+  }
+}
+
+//Future is n object representing a delayed computation.
+Future<List<Spacecraft>> downloadJSON() async {
+  final jsonEndpoint =
+      "https://$ip/parking/phpfiles/GetRegions.php";
+
+  final response = await get(jsonEndpoint);
+
+  if (response.statusCode == 200) {
+    List spacecrafts = json.decode(response.body);
+    return spacecrafts
+        .map((spacecraft) => new Spacecraft.fromJson(spacecraft))
+        .toList();
+  } else
+    throw Exception('We were not able to successfully download the json data.');
 }
