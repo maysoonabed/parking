@@ -74,7 +74,7 @@ void IRAM_ATTR onTimer2() {
 //#define WIFI_PASSWORD "135790bb"
 
 
-const char* serverName = "http://192.168.1.114/parking/phpfiles/esp.php";
+const char* serverName = "http://192.168.1.107/parking/phpfiles/esp.php";
 
 
 // Define Firebase Data Object
@@ -153,7 +153,7 @@ void setup() {
   //*****************************************************************************************************
 
   HTTPClient http1;
-  http1.begin("http://192.168.1.114/parking/phpfiles/espRegions.php");
+  http1.begin("http://192.168.1.107/parking/phpfiles/espRegions.php");
   http1.addHeader("Content-Type", "application/x-www-form-urlencoded");
   int httpResponseCode1 = http1.POST("");
 
@@ -183,7 +183,7 @@ void setup() {
     }
     if (regNum < 5) {
       lcdFlag = false;
-      for (int i = 0; i < 4; i++) {
+      for (int i = 0; i < regNum; i++) {
         lcd.setCursor(2, i);
         lcd.print(strs[i]);
         lcd.setCursor(17, i);
@@ -193,15 +193,11 @@ void setup() {
     }
     else if (regNum < 9) {
       lcdFlag = false;
-      for (int i = 0; i < 4; i++) {
-        lcd.setCursor(0, i);
+      for (int i = 0; i < regNum; i++) {
+        lcd.setCursor(10*(i/4), i%4);
         lcd.print(strs[i]);
-        lcd.setCursor(10, i);
-        lcd.print(strs[i + 4]);
-        lcd.setCursor(8, i);
+        lcd.setCursor(8+11*(i/4),  i%4);
         lcd.print(num[i]);
-        lcd.setCursor(19, i);
-        lcd.print(num[i + 4]);
       }
     }
     ////////////////////////////
@@ -476,8 +472,8 @@ void loop() {
   digitalWrite(trigPin, LOW);
   duration = pulseIn(echoPin, HIGH);
   distanceCm = duration * SOUND_SPEED / 2;
-  //  Serial.print("Distance (cm): ");
-  //  Serial.println(distanceCm);
+    Serial.print("Distance (cm): ");
+    Serial.println(distanceCm);
   //  Serial.println("******************************");
   if (distanceCm <= 5) {
     //أول مرة بفحص اذا المسافة أقل من 5 وفيه حال أول مرة ببلش التايمر فيه حال ما كان أول مرة بضل التايمر يعد
@@ -503,7 +499,11 @@ void updateLCD(int x) {
     lcd.print(num[x]);
   }
 
-  else {
+  else if (regNum < 9) {
+       lcd.setCursor(8+11*(x/4),  x%4);
+        lcd.print(num[x]);
+  }
+  else{
     for (int i = 0; i < 4; i++) {
       if (x == (lcdNum + i) % regNum) {
         lcd.setCursor(8, i);
