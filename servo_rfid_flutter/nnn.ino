@@ -52,7 +52,9 @@ bool t = false;
 hw_timer_t * timer2 = NULL;
 
 void IRAM_ATTR onTimer2() {
+    if (distanceCm <= 5) {
   digitalWrite(ZamorPin, HIGH);
+    }
   Serial.print("Distance (cm): ");
   Serial.println(distanceCm);
   Serial.println("******************************");
@@ -68,13 +70,15 @@ void IRAM_ATTR onTimer2() {
 
 
 
-//#define WIFI_SSID    "maysoon"
-//#define WIFI_PASSWORD   "maysoonAbd"
+//#define WIFI_SSID    "Samah"
+//#define WIFI_PASSWORD  "smsmaia1998"
+
 //#define WIFI_SSID "Tobasi2020"
 //#define WIFI_PASSWORD "135790bb"
 
 
-const char* serverName = "http://192.168.1.107/parking/phpfiles/esp.php";
+const char* serverName = "http://192.168.1.114/parking/phpfiles/esp.php";
+const char* serverName1 = "http://192.168.1.114/parking/phpfiles/espRegions.php";
 
 
 // Define Firebase Data Object
@@ -153,7 +157,7 @@ void setup() {
   //*****************************************************************************************************
 
   HTTPClient http1;
-  http1.begin("http://192.168.1.107/parking/phpfiles/espRegions.php");
+  http1.begin( serverName1);
   http1.addHeader("Content-Type", "application/x-www-form-urlencoded");
   int httpResponseCode1 = http1.POST("");
 
@@ -360,6 +364,10 @@ void loop() {
           break;
         }
       }
+      if(rc == "84a2132d"){
+              Firebase.setInt(firebaseData, "/Esp/irflag",1);
+        }else         Serial.println("not equals");
+
       Firebase.setString(firebaseData, "/Esp/rfid/in", buffer);
       String rin(reg);
       Firebase.setInt(firebaseData, "/Esp/region/"+rin+"/"+rc,0);
@@ -419,6 +427,9 @@ void loop() {
     for (int x = 0; x < 50; x++) {
       if (ins[x] == ro) {
         b = false;
+         if(ro.equals("84a2132d")){
+              Firebase.setInt(firebaseData, "/Esp/irflag",0);
+       }else         Serial.println("not equals");
         Firebase.setString(firebaseData, "/Esp/rfid/out", buffer);
         Firebase.deleteNode(firebaseData,"/Esp/region/"+rgs[x]+"/"+ro);
 
